@@ -19,7 +19,7 @@
     .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,500px);border:1px solid var(--line);min-height:0}
     /* 왼쪽: 미리보기 */
     .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;min-width:0;min-height:0;border-right:1px solid var(--line)}
-    .card{width:min(100%,calc((100vh - 290px) * 1.5));border:1px solid var(--ink);padding:18px 20px 16px;box-shadow:14px 14px 0 #141414;display:flex;flex-direction:column;gap:14px}
+    .card{width:min(100%,calc((100vh - 320px) * 1.5));border:1px solid var(--ink);padding:18px 20px 16px;box-shadow:14px 14px 0 #141414;display:flex;flex-direction:column;gap:14px}
     .card-top,.card-bottom{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.12em}
     .card-bottom{border-top:1px solid var(--ink);padding-top:12px;letter-spacing:.04em}.card-bottom b{font-weight:400;font-size:17px}.card-bottom span{color:var(--muted);font-size:11px;letter-spacing:.1em}
     .preview-frame{position:relative;aspect-ratio:3/2;background:#151515;display:grid;place-items:center;overflow:hidden}
@@ -48,9 +48,9 @@
     button:disabled{opacity:.3;cursor:not-allowed}
     .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .foot{margin-top:auto;padding-top:18px}.foot .line{border-top:1px solid var(--line);padding-top:14px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:12px}
-    .status{min-height:18px;font-size:12px;color:var(--muted);margin-top:10px}.status.error{color:#ff9a85}.status.success{color:#a9dfbd}
+    .status{min-height:20px;max-width:100%;font-size:14px;line-height:1.5;color:#cfcfcf;text-align:center}.status.error{color:#ff9a85}.status.success{color:#a9dfbd}
     dialog{background:#1d1d1d;color:var(--ink);border:1px solid #777;border-radius:0;max-width:440px;padding:22px}dialog::backdrop{background:#000b}dialog h3{margin:0 0 10px;font:400 22px var(--serif)}dialog p{font-size:12px;line-height:1.6;color:#c8c8c8}.close{float:right;background:none;border:0;font-size:22px}
-    @media(max-height:860px){header{height:52px;margin-bottom:12px}.logo{width:34px;height:34px;font-size:15px}.controls{padding:18px 22px 14px}h1{font-size:26px;margin:6px 0 4px}.lede{margin-bottom:12px}.cell{padding:8px 12px 9px}.cell>label,.cell>.k{margin-bottom:6px}.primary,.dark,.secondary{padding:9px 10px}.seg button{padding:6px 4px}.foot{padding-top:12px}.foot .line{padding-top:10px;margin-bottom:8px}.status{margin-top:6px}.stage{padding:16px;gap:12px}.card{width:min(100%,calc((100vh - 250px) * 1.5));padding:14px 16px 12px;gap:10px}}
+    @media(max-height:860px){header{height:52px;margin-bottom:12px}.logo{width:34px;height:34px;font-size:15px}.controls{padding:18px 22px 14px}h1{font-size:26px;margin:6px 0 4px}.lede{margin-bottom:12px}.cell{padding:8px 12px 9px}.cell>label,.cell>.k{margin-bottom:6px}.primary,.dark,.secondary{padding:9px 10px}.seg button{padding:6px 4px}.foot{padding-top:12px}.foot .line{padding-top:10px;margin-bottom:8px}.stage{padding:16px;gap:12px}.card{width:min(100%,calc((100vh - 280px) * 1.5));padding:14px 16px 12px;gap:10px}}
     @media(max-width:900px){body{overflow:auto}.app{height:auto}.layout{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.card{width:100%}}
   </style>
 </head>
@@ -64,6 +64,7 @@
         <div class="preview-frame" id="frame"><div class="empty" id="empty"><b>Letters made of you.</b>카메라를 시작하거나 사진을 불러오세요.</div><video id="video" class="hidden" autoplay playsinline muted></video><canvas id="preview" class="hidden" width="1800" height="1200"></canvas><span class="badge hidden" id="liveBadge">LIVE CAMERA</span></div>
         <div class="card-bottom"><b>Text Portrait</b><span>POSTCARD — 1800 × 1200 PX</span></div>
       </div>
+      <div class="status" id="status" aria-live="polite"></div>
       <div class="shot-row"><button id="shotBtn" class="primary hidden" disabled>◉ 사진 촬영</button><button id="retakeBtn" class="secondary hidden">↺ 다시 촬영</button></div>
     </section>
     <aside class="controls">
@@ -84,13 +85,13 @@
       <div class="foot">
         <div class="line"><span>Output</span><span>6 × 4 in · 300 dpi</span></div>
         <div class="two"><button id="downloadBtn" class="secondary" disabled>↓ JPG 저장</button><button id="printBtn" class="dark" disabled>✦ 바로 인화</button></div>
-        <div class="status" id="status" aria-live="polite"></div>
       </div>
     </aside>
   </div>
 </main>
 <dialog id="guide"><button class="close" onclick="guide.close()">×</button><h3>출력 도우미가 필요합니다</h3><p>처음 한 번만 이 Mac에서 <code>print-bridge</code>를 실행하세요. 이후에는 이 버튼 하나로 CP1500 인쇄 대기열에 전송됩니다.</p><button class="dark" onclick="guide.close()">확인</button></dialog>
 <script>
+window.addEventListener('error',e=>{const el=document.getElementById('status');if(el){el.textContent='오류: '+e.message;el.className='status error'}});window.addEventListener('unhandledrejection',e=>{const el=document.getElementById('status');if(el){el.textContent='오류: '+((e.reason&&(e.reason.name+' '+e.reason.message))||e.reason);el.className='status error'}});
 const $=s=>document.querySelector(s), video=$('#video'), preview=$('#preview'), ctx=preview.getContext('2d'), source=document.createElement('canvas'), sx=source.getContext('2d',{willReadFrequently:true}); source.width=900;source.height=600;
 let stream=null, hasPhoto=false, mode='mono', background='light', style='words', cutout='none', cat=null, segPromise=null;
 const status=(text,kind='')=>{const el=$('#status');el.textContent=text;el.className='status '+kind};
@@ -140,7 +141,7 @@ function drawType(target){
   for(let k=0;k<n;k++)E[k]=L[k]+.6*(L[k]-big[k])+.8*(L[k]-small[k]);
   // 3) 히스토그램 평활화: 밝기 단계를 고르게 펼쳐 얼굴 안 명암 차이까지 살립니다.
   const order=Array.from(E.keys()).filter(k=>!K||K[k]).sort((x,y)=>E[x]-E[y]), m=Math.max(2,order.length), eq=new Float32Array(n);order.forEach((k,r)=>eq[k]=r/(m-1));
-  const sorted=order.map(k=>E[k]), lo=sorted[Math.floor(m*.01)]??0, span=Math.max(.05,(sorted[Math.floor(m*.99)]??1)-lo);
+  const sorted=order.map(k=>E[k]), lo=order.length?sorted[Math.floor(m*.01)]:0, span=Math.max(.05,(order.length?sorted[Math.min(order.length-1,Math.floor(m*.99))]:1)-lo);
   const {table,measure,max}=glyphTable(font);
   const phraseInk=[...phrase].map(c=>measure(c)/max);
   out.textAlign='center';out.textBaseline='middle';out.font=`400 ${size}px ${font}`;
