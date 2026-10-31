@@ -49,6 +49,7 @@
     .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
     .foot{margin-top:auto;padding-top:18px;position:sticky;bottom:0;background:var(--bg);padding-bottom:16px;z-index:2}.controls{padding-bottom:0!important}.foot .line{border-top:1px solid var(--line);padding-top:14px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:12px}
     .status{min-height:20px;max-width:100%;font-size:14px;line-height:1.5;color:#cfcfcf;text-align:center}.status.error{color:#ff9a85}.status.success{color:#a9dfbd}
+    #printSheet{display:none}@media print{@page{size:6in 4in;margin:0}html,body{height:auto;overflow:visible;background:#fff}body>*:not(#printSheet){display:none!important}#printSheet{display:block;width:6in;height:4in}#printSheet img{width:100%;height:100%;object-fit:contain;display:block}}
     dialog{background:#1d1d1d;color:var(--ink);border:1px solid #777;border-radius:0;max-width:440px;padding:22px}dialog::backdrop{background:#000b}dialog h3{margin:0 0 10px;font:400 22px var(--serif)}dialog p{font-size:12px;line-height:1.6;color:#c8c8c8}.close{float:right;background:none;border:0;font-size:22px}
     @media(max-height:860px){header{height:52px;margin-bottom:12px}.logo{width:34px;height:34px;font-size:15px}.controls{padding:18px 22px 14px}h1{font-size:26px;margin:6px 0 4px}.lede{margin-bottom:12px}.cell{padding:8px 12px 9px}.cell>label,.cell>.k{margin-bottom:6px}.primary,.dark,.secondary{padding:9px 10px}.seg button{padding:6px 4px}.foot{padding-top:12px}.foot .line{padding-top:10px;margin-bottom:8px}.stage{padding:16px;gap:12px}.card{width:min(100%,calc((100vh - 280px) * 1.5));padding:14px 16px 12px;gap:10px}}
     .controls.compact .eyebrow,.controls.compact .lede,.controls.compact .foot .line{display:none}.controls.compact h1{font-size:22px;margin:0 0 10px}.controls.compact{padding-top:14px;padding-bottom:12px}.controls.compact .foot{padding-top:10px}
@@ -91,7 +92,8 @@
     </aside>
   </div>
 </main>
-<dialog id="guide"><button class="close" onclick="guide.close()">×</button><h3>출력 도우미가 필요합니다</h3><p>처음 한 번만 이 Mac에서 <code>print-bridge</code>를 실행하세요. 이후에는 이 버튼 하나로 CP1500 인쇄 대기열에 전송됩니다.</p><button class="dark" onclick="guide.close()">확인</button></dialog>
+<dialog id="guide"><button class="close" onclick="guide.close()">×</button><h3>출력 도우미에 연결하지 못했습니다</h3><p>자동 인화는 프린터가 연결된 Mac에서 <code>print-bridge</code>를 실행했을 때만 작동합니다.<br>대신 이 기기의 인쇄 창에서 같은 Wi-Fi의 <b>Canon SELPHY CP1500</b>을 골라 인쇄할 수 있습니다.</p><div class="two"><button class="secondary" onclick="guide.close()">닫기</button><button class="dark" onclick="guide.close();systemPrint()">인쇄 창 열기</button></div></dialog>
+<div id="printSheet"><img id="printImg" alt=""></div>
 <script>
 window.addEventListener('error',e=>{const el=document.getElementById('status');if(el){el.textContent='오류: '+e.message;el.className='status error'}});window.addEventListener('unhandledrejection',e=>{const el=document.getElementById('status');if(el){el.textContent='오류: '+((e.reason&&(e.reason.name+' '+e.reason.message))||e.reason);el.className='status error'}});
 const $=s=>document.querySelector(s), video=$('#video'), preview=$('#preview'), ctx=preview.getContext('2d'), source=document.createElement('canvas'), sx=source.getContext('2d',{willReadFrequently:true}); source.width=900;source.height=600;
@@ -164,7 +166,10 @@ function drawType(target){
 function render(){if(hasPhoto)drawType(preview)}
 function imageBlob(){const printCanvas=document.createElement('canvas');printCanvas.width=1800;printCanvas.height=1200;drawType(printCanvas);return new Promise(resolve=>printCanvas.toBlob(resolve,'image/jpeg',.96))}
 async function download(){const blob=await imageBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='type-selfie-cp1500.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);status('인쇄용 JPG를 저장했습니다.','success')}
-async function print(){status('CP1500에 인쇄 요청을 보내는 중…');try{const blob=await imageBlob(),form=new FormData();form.append('image',blob,'type-selfie-cp1500.jpg');form.append('title','TYPE SELFIE');const res=await fetch('http://127.0.0.1:18765/print',{method:'POST',body:form});const data=await res.json();if(!res.ok)throw Error(data.error);status('인쇄 대기열에 추가했습니다. CP1500에서 곧 출력됩니다.','success')}catch(e){status('출력 도우미에 연결하지 못했습니다. README의 1회 설정을 확인하세요.','error');$('#guide').showModal()}}
+// 기기 인쇄 창: 전자칠판·태블릿처럼 출력 도우미가 없는 기기에서 Wi-Fi 프린터로 직접 인쇄합니다.
+async function systemPrint(){status('인쇄 창을 여는 중… 프린터에서 Canon SELPHY CP1500, 용지 4×6(엽서)을 고르세요.');const blob=await imageBlob(),img=$('#printImg');if(img.src)URL.revokeObjectURL(img.src);img.src=URL.createObjectURL(blob);try{await img.decode()}catch(e){}window.print()}
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+async function print(){if(isMobile)return systemPrint();status('CP1500에 인쇄 요청을 보내는 중…');try{const blob=await imageBlob(),form=new FormData();form.append('image',blob,'type-selfie-cp1500.jpg');form.append('title','TYPE SELFIE');const res=await fetch('http://127.0.0.1:18765/print',{method:'POST',body:form});const data=await res.json();if(!res.ok)throw Error(data.error);status('인쇄 대기열에 추가했습니다. CP1500에서 곧 출력됩니다.','success')}catch(e){status('출력 도우미에 연결하지 못했습니다.','error');$('#guide').showModal()}}
 // 좌우 반전: 기기 카메라가 이미 반전된 영상을 보내면 끄면 됩니다. 기기별로 기억합니다.
 function applyMirror(){video.classList.toggle('unflipped',!mirror);const b=$('#flipBtn');b.textContent=mirror?'↔ 좌우 반전 켜짐':'↔ 좌우 반전 꺼짐';b.classList.toggle('off',!mirror)}
 $('#flipBtn').onclick=()=>{mirror=!mirror;localStorage.setItem('typeSelfieMirror',mirror?'1':'0');applyMirror();if(hasPhoto){const t=document.createElement('canvas');t.width=source.width;t.height=source.height;const g=t.getContext('2d');g.translate(t.width,0);g.scale(-1,1);g.drawImage(source,0,0);sx.drawImage(t,0,0);cat=null;render();segment()}};applyMirror();
