@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>TYPE SELFIE — SELPHY CP1500</title>
+  <style>
+    :root{--bg:#1a1a1a;--cell:#1d1d1d;--line:#353535;--ink:#ececec;--muted:#8c8c8c;--dim:#5e5e5e;
+      --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,"Apple SD Gothic Neo",monospace;--serif:"Iowan Old Style",Georgia,"Apple SD Gothic Neo",serif}
+    *{box-sizing:border-box}html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;overflow:hidden}
+    button,input,select{font:inherit;color:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .app{height:100vh;display:grid;grid-template-rows:auto 1fr;padding:0 16px 16px}
+    header{display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:1px solid var(--line);margin:0 -16px 16px;padding:0 16px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:16px;letter-spacing:.02em}
+    .logo{width:40px;height:40px;background:var(--ink);color:#111;display:grid;place-items:center;font-weight:800;font-size:17px;letter-spacing:-.05em}
+    .chip{border:1px solid var(--line);padding:9px 14px;font-size:12px;color:#cfcfcf}
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,500px);border:1px solid var(--line);min-height:0}
+    /* 왼쪽: 미리보기 */
+    .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;min-width:0;min-height:0;border-right:1px solid var(--line)}
+    .card{width:min(100%,calc((100vh - 290px) * 1.5));border:1px solid var(--ink);padding:18px 20px 16px;box-shadow:14px 14px 0 #141414;display:flex;flex-direction:column;gap:14px}
+    .card-top,.card-bottom{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;letter-spacing:.12em}
+    .card-bottom{border-top:1px solid var(--ink);padding-top:12px;letter-spacing:.04em}.card-bottom b{font-weight:400;font-size:17px}.card-bottom span{color:var(--muted);font-size:11px;letter-spacing:.1em}
+    .preview-frame{position:relative;aspect-ratio:3/2;background:#151515;display:grid;place-items:center;overflow:hidden}
+    .preview-frame canvas,.preview-frame video{width:100%;height:100%;object-fit:cover;display:block}.preview-frame video{transform:scaleX(-1)}
+    .empty{text-align:center;color:var(--muted);font-size:12px;line-height:1.7}.empty b{display:block;color:var(--ink);font:400 clamp(24px,3vw,38px)/1.1 var(--serif);margin-bottom:8px}
+    .badge{position:absolute;top:0;left:0;background:var(--ink);color:#111;padding:5px 8px;font-size:10px;letter-spacing:.1em}
+    .shot-row{display:flex;gap:10px;min-height:44px}.shot-row button{min-width:180px}
+    /* 오른쪽: 조작 메뉴 */
+    .controls{display:flex;flex-direction:column;padding:28px 28px 22px;min-height:0;overflow:auto}
+    .eyebrow{color:var(--muted);font-size:12px;letter-spacing:.04em}
+    h1{font:400 clamp(26px,2.4vw,36px)/1.15 var(--serif);margin:10px 0 8px;letter-spacing:-.01em}
+    .lede{color:var(--muted);font-size:12px;line-height:1.6;margin:0 0 18px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+    .cell{background:var(--bg);padding:11px 14px 12px;min-width:0}.cell.span{grid-column:1/-1}
+    .cell>label,.cell>.k{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:8px}
+    .cell output{color:var(--ink)}
+    input[type=text]{width:100%;background:transparent;border:0;border-bottom:1px solid #555;padding:3px 0 6px;font-size:15px;outline:none}input[type=text]:focus{border-color:var(--ink)}
+    select{width:100%;background:transparent;border:1px solid var(--line);padding:6px 8px;font-size:12px;outline:none}option{background:#1a1a1a}
+    input[type=range]{width:100%;accent-color:var(--ink);margin:0}
+    .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px}.seg.seg3{grid-template-columns:1fr 1fr 1fr}
+    .seg button{background:transparent;border:1px solid var(--line);padding:7px 4px;font-size:12px;color:#b5b5b5}.seg button:hover{border-color:#777}
+    .seg button.active{background:var(--ink);color:#111;border-color:var(--ink)}
+    .primary,.dark,.secondary{border-radius:0;padding:11px 12px;font-size:13px;letter-spacing:.02em;text-align:center}
+    .primary,.dark{background:var(--ink);color:#111;border:1px solid var(--ink)}.primary:hover,.dark:hover{background:#fff}
+    .secondary{background:transparent;border:1px solid var(--line);color:var(--ink);display:block;cursor:pointer}.secondary:hover{border-color:var(--ink)}
+    button:disabled{opacity:.3;cursor:not-allowed}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .foot{margin-top:auto;padding-top:18px}.foot .line{border-top:1px solid var(--line);padding-top:14px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:12px}
+    .status{min-height:18px;font-size:12px;color:var(--muted);margin-top:10px}.status.error{color:#ff9a85}.status.success{color:#a9dfbd}
+    dialog{background:#1d1d1d;color:var(--ink);border:1px solid #777;border-radius:0;max-width:440px;padding:22px}dialog::backdrop{background:#000b}dialog h3{margin:0 0 10px;font:400 22px var(--serif)}dialog p{font-size:12px;line-height:1.6;color:#c8c8c8}.close{float:right;background:none;border:0;font-size:22px}
+    @media(max-height:860px){header{height:52px;margin-bottom:12px}.logo{width:34px;height:34px;font-size:15px}.controls{padding:18px 22px 14px}h1{font-size:26px;margin:6px 0 4px}.lede{margin-bottom:12px}.cell{padding:8px 12px 9px}.cell>label,.cell>.k{margin-bottom:6px}.primary,.dark,.secondary{padding:9px 10px}.seg button{padding:6px 4px}.foot{padding-top:12px}.foot .line{padding-top:10px;margin-bottom:8px}.status{margin-top:6px}.stage{padding:16px;gap:12px}.card{width:min(100%,calc((100vh - 250px) * 1.5));padding:14px 16px 12px;gap:10px}}
+    @media(max-width:900px){body{overflow:auto}.app{height:auto}.layout{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.card{width:100%}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header><div class="brand"><div class="logo">›\</div>TYPE SELFIE</div><div class="chip">SELPHY CP1500 · 6 × 4 in</div></header>
+  <div class="layout">
+    <section class="stage">
+      <div class="card">
+        <div class="card-top"><span>TYPE.SELFIE</span><span>№ 01</span></div>
+        <div class="preview-frame" id="frame"><div class="empty" id="empty"><b>Letters made of you.</b>카메라를 시작하거나 사진을 불러오세요.</div><video id="video" class="hidden" autoplay playsinline muted></video><canvas id="preview" class="hidden" width="1800" height="1200"></canvas><span class="badge hidden" id="liveBadge">LIVE CAMERA</span></div>
+        <div class="card-bottom"><b>Text Portrait</b><span>POSTCARD — 1800 × 1200 PX</span></div>
+      </div>
+      <div class="shot-row"><button id="shotBtn" class="primary hidden" disabled>◉ 사진 촬영</button><button id="retakeBtn" class="secondary hidden">↺ 다시 촬영</button></div>
+    </section>
+    <aside class="controls">
+      <div class="eyebrow">Printable JPG / SELPHY CP1500</div>
+      <h1>Letters make your portrait.</h1>
+      <p class="lede">얼굴을 글자로 바꿔 4×6 엽서로 바로 인화합니다.</p>
+      <div class="grid">
+        <div class="cell span"><div class="k">사진</div><div class="two"><button class="primary" id="cameraBtn">◉ 카메라 시작</button><label class="secondary" for="upload">▣ 파일 불러오기</label><input class="hidden" id="upload" type="file" accept="image/*" /></div></div>
+        <div class="cell span"><label for="words">사진을 채울 문구</label><input id="words" type="text" value="AI · CREATE · MAKE · TOGETHER · " maxlength="100" /></div>
+        <div class="cell"><label for="density">글자 밀도 <output id="densityOut">160</output></label><input id="density" type="range" min="80" max="240" value="160" /></div>
+        <div class="cell"><label for="contrast">명암 대비 <output id="contrastOut">1.25</output></label><input id="contrast" type="range" min="70" max="190" value="125" /></div>
+        <div class="cell span"><div class="k">주변 지우기</div><div class="seg seg3"><button class="cut active" data-cut="none">끄기</button><button class="cut" data-cut="face">얼굴만</button><button class="cut" data-cut="person">인물 전체</button></div></div>
+        <div class="cell"><div class="k">글자 구성</div><div class="seg"><button class="style active" data-style="words">문구+명암</button><button class="style" data-style="ascii">아스키</button></div></div>
+        <div class="cell"><label for="font">글꼴</label><select id="font"><option value="monospace">모노</option><option value="sans-serif">고딕</option><option value="serif">명조</option></select></div>
+        <div class="cell"><div class="k">색상</div><div class="seg"><button class="mode active" data-mode="mono">흑백</button><button class="mode" data-mode="color">사진 색상</button></div></div>
+        <div class="cell"><div class="k">배경</div><div class="seg"><button class="bg active" data-bg="light">밝게</button><button class="bg" data-bg="dark">어둡게</button></div></div>
+      </div>
+      <div class="foot">
+        <div class="line"><span>Output</span><span>6 × 4 in · 300 dpi</span></div>
+        <div class="two"><button id="downloadBtn" class="secondary" disabled>↓ JPG 저장</button><button id="printBtn" class="dark" disabled>✦ 바로 인화</button></div>
+        <div class="status" id="status" aria-live="polite"></div>
+      </div>
+    </aside>
+  </div>
+</main>
+<dialog id="guide"><button class="close" onclick="guide.close()">×</button><h3>출력 도우미가 필요합니다</h3><p>처음 한 번만 이 Mac에서 <code>print-bridge</code>를 실행하세요. 이후에는 이 버튼 하나로 CP1500 인쇄 대기열에 전송됩니다.</p><button class="dark" onclick="guide.close()">확인</button></dialog>
+<script>
+const $=s=>document.querySelector(s), video=$('#video'), preview=$('#preview'), ctx=preview.getContext('2d'), source=document.createElement('canvas'), sx=source.getContext('2d',{willReadFrequently:true}); source.width=900;source.height=600;
+let stream=null, hasPhoto=false, mode='mono', background='light', style='words', cutout='none', cat=null, segPromise=null;
+const status=(text,kind='')=>{const el=$('#status');el.textContent=text;el.className='status '+kind};
+function stopCamera(){if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;video.classList.add('hidden');$('#liveBadge').classList.add('hidden');$('#shotBtn').classList.add('hidden');$('#shotBtn').disabled=true}
+function setOutputReady(ready){$('#downloadBtn').disabled=!ready;$('#printBtn').disabled=!ready}
+async function camera(){try{stopCamera();stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();video.classList.remove('hidden');$('#empty').classList.add('hidden');$('#liveBadge').classList.remove('hidden');$('#shotBtn').classList.remove('hidden');$('#retakeBtn').classList.add('hidden');status('카메라를 준비하는 중입니다…');const ready=()=>{if(video.videoWidth&&video.videoHeight){$('#shotBtn').disabled=false;status('카메라 준비 완료 · 촬영 버튼을 눌러주세요.','success')}};if(video.readyState>=2)ready();else video.onloadeddata=ready}catch(e){status('카메라를 사용할 수 없습니다. 권한을 확인하거나 사진 파일을 불러오세요.','error')}}
+function coverDraw(target, image, mirror=false){const W=target.canvas.width,H=target.canvas.height,iw=image.videoWidth||image.naturalWidth,ih=image.videoHeight||image.naturalHeight;if(!iw||!ih)throw new Error('카메라 프레임을 아직 받을 수 없습니다.');const r=Math.max(W/iw,H/ih),w=iw*r,h=ih*r,x=(W-w)/2,y=(H-h)/2;target.save();if(mirror){target.translate(W,0);target.scale(-1,1);target.drawImage(image,W-x-w,y,w,h)}else target.drawImage(image,x,y,w,h);target.restore()}
+function capture(){try{if(video.readyState<2||!video.videoWidth)throw new Error('카메라 준비 중입니다. 잠시 후 다시 눌러주세요.');sx.fillStyle='#fff';sx.fillRect(0,0,900,600);coverDraw(sx,video,true);stopCamera();hasPhoto=true;cat=null;setOutputReady(true);$('#preview').classList.remove('hidden');$('#retakeBtn').classList.remove('hidden');render();segment();status('사진을 글자로 변환했습니다. 설정을 바꿔 보세요.','success')}catch(e){status(e.message,'error')}}
+// 주변 지우기: MediaPipe 셀피 분할 모델을 이 브라우저 안에서만 실행합니다(사진은 외부로 전송되지 않음).
+// 분류 번호 0 배경 · 1 머리카락 · 2 몸 피부 · 3 얼굴 피부 · 4 옷 · 5 기타(안경 등)
+function getSegmenter(){if(!segPromise)segPromise=(async()=>{const {FilesetResolver,ImageSegmenter}=await import('./vendor/tasks-vision/vision_bundle.mjs');const files=await FilesetResolver.forVisionTasks(new URL('./vendor/tasks-vision/wasm',location.href).href);return ImageSegmenter.createFromOptions(files,{baseOptions:{modelAssetPath:new URL('./vendor/selfie_multiclass_256x256.tflite',location.href).href,delegate:'CPU'},runningMode:'IMAGE',outputCategoryMask:true,outputConfidenceMasks:false})})().catch(e=>{segPromise=null;throw e});return segPromise}
+async function segment(){if(cutout==='none'||!hasPhoto||cat)return render();try{status('얼굴 영역을 찾는 중…');const seg=await getSegmenter(),r=seg.segment(source),m=r.categoryMask;cat={w:m.width,h:m.height,data:m.getAsUint8Array().slice()};r.close();status('주변을 지웠습니다.','success')}catch(e){console.error(e);status('얼굴 인식 기능을 불러오지 못했습니다. 로컬 서버(http://)로 열었는지 확인하세요.','error')}render()}
+function keepGrid(cols,rows){if(cutout==='none'||!cat)return null;const keep=cutout==='face'?new Set([1,3,5]):new Set([1,2,3,4,5]),c=document.createElement('canvas');c.width=cat.w;c.height=cat.h;const g=c.getContext('2d'),img=g.createImageData(cat.w,cat.h);for(let k=0;k<cat.data.length;k++)if(keep.has(cat.data[k]))img.data[k*4+3]=255;g.putImageData(img,0,0);const t=document.createElement('canvas');t.width=cols;t.height=rows;const tg=t.getContext('2d',{willReadFrequently:true});tg.imageSmoothingQuality='high';tg.drawImage(c,0,0,cols,rows);const d=tg.getImageData(0,0,cols,rows).data,K=new Uint8Array(cols*rows);for(let k=0;k<K.length;k++)K[k]=d[k*4+3]>110?1:0;return K}
+// 글자마다 실제 잉크 양을 재서 '연한 글자 → 진한 글자' 순서표를 만듭니다(글꼴별로 1회).
+const glyphCache={};
+function glyphTable(font){
+  if(glyphCache[font])return glyphCache[font];
+  const w=24,h=44,c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});
+  g.font=`400 40px ${font}`;g.textAlign='center';g.textBaseline='middle';
+  const measure=ch=>{g.clearRect(0,0,w,h);g.fillText(ch,w/2,h/2);const d=g.getImageData(0,0,w,h).data;let s=0;for(let k=3;k<d.length;k+=4)s+=d[k];return s/(w*h*255)};
+  const clean=".,:;'!il|1IrtfjJcvxzunoYLCUQ0OZmwqpdbkhaXKAEFGHSRPDB8NMW&%#@$";let list=[...clean].map(ch=>[ch,measure(ch)]);
+  list.sort((x,y)=>x[1]-y[1]);const max=list[list.length-1][1];
+  const table=[];for(let t=0;t<64;t++){const want=t/63*max;let best=list[0];for(const e of list)if(Math.abs(e[1]-want)<Math.abs(best[1]-want))best=e;table.push(best[0])}
+  for(let t=0;t<6;t++)table[t]=' ';
+  return glyphCache[font]={table,measure,max};
+}
+function blur(src,cols,rows,r){const tmp=new Float32Array(src.length),dst=new Float32Array(src.length);
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){let s=0,c=0;for(let d=-r;d<=r;d++){const xx=x+d;if(xx>=0&&xx<cols){s+=src[y*cols+xx];c++}}tmp[y*cols+x]=s/c}
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){let s=0,c=0;for(let d=-r;d<=r;d++){const yy=y+d;if(yy>=0&&yy<rows){s+=tmp[yy*cols+x];c++}}dst[y*cols+x]=s/c}
+  return dst}
+function drawType(target){
+  const cols=+$('#density').value, contrast=+$('#contrast').value/100, font=$('#font').value, dark=background==='dark', out=target.getContext('2d'), W=target.width, H=target.height;
+  const phrase=($('#words').value||'TYPE').replace(/[\s·.,:;!?\-_/|]+/g,'')||'TYPE';
+  out.fillStyle=dark?'#16130f':'#fffaf2';out.fillRect(0,0,W,H);
+  // 글자 칸은 세로로 긴 비율(고정폭 글꼴)이어야 얼굴이 찌그러지지 않습니다.
+  const cw=W/cols, ch=cw*1.8, rows=Math.ceil(H/ch), size=ch*.92;
+  const tiny=document.createElement('canvas');tiny.width=cols;tiny.height=rows;const tx=tiny.getContext('2d',{willReadFrequently:true});tx.imageSmoothingQuality='high';tx.drawImage(source,0,0,cols,rows);
+  const px=tx.getImageData(0,0,cols,rows).data, n=cols*rows, L=new Float32Array(n);
+  for(let k=0;k<n;k++)L[k]=(px[k*4]*.299+px[k*4+1]*.587+px[k*4+2]*.114)/255;
+  const K=keepGrid(cols,rows);if(K)for(let k=0;k<n;k++)if(!K[k])L[k]=1;
+  // 1) 얼굴 크기 범위의 명암 강조 + 2) 눈·코·입 윤곽 강조
+  const big=blur(L,cols,rows,Math.max(2,Math.round(cols/14))), small=blur(L,cols,rows,1), E=new Float32Array(n);
+  for(let k=0;k<n;k++)E[k]=L[k]+.6*(L[k]-big[k])+.8*(L[k]-small[k]);
+  // 3) 히스토그램 평활화: 밝기 단계를 고르게 펼쳐 얼굴 안 명암 차이까지 살립니다.
+  const order=Array.from(E.keys()).filter(k=>!K||K[k]).sort((x,y)=>E[x]-E[y]), m=Math.max(2,order.length), eq=new Float32Array(n);order.forEach((k,r)=>eq[k]=r/(m-1));
+  const sorted=order.map(k=>E[k]), lo=sorted[Math.floor(m*.01)]??0, span=Math.max(.05,(sorted[Math.floor(m*.99)]??1)-lo);
+  const {table,measure,max}=glyphTable(font);
+  const phraseInk=[...phrase].map(c=>measure(c)/max);
+  out.textAlign='center';out.textBaseline='middle';out.font=`400 ${size}px ${font}`;
+  let i=0;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const k=y*cols+x;if(K&&!K[k])continue;const lin=Math.max(0,Math.min(1,(E[k]-lo)/span));
+    let lum=.65*eq[k]+.35*lin;lum=Math.max(0,Math.min(1,(lum-.5)*contrast+.5));
+    const ink=Math.pow(dark?lum:1-lum,1.15);
+    let chr;
+    // 문구 글자는 진한 곳에서 잉크 양이 비슷한 경우에만 사용해 명암이 깨지지 않게 합니다.
+    if(style==='words'&&ink>.55&&phraseInk[i%phrase.length]<=ink+.15)chr=phrase[i++%phrase.length];
+    else chr=table[Math.round(ink*63)];
+    if(chr===' ')continue;
+    if(mode==='color'){const p=k*4;out.fillStyle=`rgb(${px[p]},${px[p+1]},${px[p+2]})`}else out.fillStyle=dark?'#ececec':'#141414';
+    out.fillText(chr,x*cw+cw/2,y*ch+ch/2);
+  }
+}
+function render(){if(hasPhoto)drawType(preview)}
+function imageBlob(){const printCanvas=document.createElement('canvas');printCanvas.width=1800;printCanvas.height=1200;drawType(printCanvas);return new Promise(resolve=>printCanvas.toBlob(resolve,'image/jpeg',.96))}
+async function download(){const blob=await imageBlob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='type-selfie-cp1500.jpg';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);status('인쇄용 JPG를 저장했습니다.','success')}
+async function print(){status('CP1500에 인쇄 요청을 보내는 중…');try{const blob=await imageBlob(),form=new FormData();form.append('image',blob,'type-selfie-cp1500.jpg');form.append('title','TYPE SELFIE');const res=await fetch('http://127.0.0.1:18765/print',{method:'POST',body:form});const data=await res.json();if(!res.ok)throw Error(data.error);status('인쇄 대기열에 추가했습니다. CP1500에서 곧 출력됩니다.','success')}catch(e){status('출력 도우미에 연결하지 못했습니다. README의 1회 설정을 확인하세요.','error');$('#guide').showModal()}}
+$('#cameraBtn').onclick=camera;$('#shotBtn').onclick=capture;$('#retakeBtn').onclick=camera;$('#downloadBtn').onclick=download;$('#printBtn').onclick=print;
+$('#upload').onchange=e=>{let f=e.target.files[0];if(!f)return;let im=new Image();im.onload=()=>{sx.fillStyle='#fff';sx.fillRect(0,0,900,600);coverDraw(sx,im);hasPhoto=true;cat=null;setOutputReady(true);stopCamera();$('#empty').classList.add('hidden');$('#preview').classList.remove('hidden');$('#retakeBtn').classList.remove('hidden');render();segment();status('사진을 불러왔습니다.','success')};im.src=URL.createObjectURL(f)};
+['#words','#font','#density','#contrast'].forEach(s=>$(s).addEventListener('input',render));$('#density').oninput=e=>{$('#densityOut').textContent=e.target.value;render()};$('#contrast').oninput=e=>{$('#contrastOut').textContent=(e.target.value/100).toFixed(2);render()};document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));render()});document.querySelectorAll('.cut').forEach(b=>b.onclick=()=>{cutout=b.dataset.cut;document.querySelectorAll('.cut').forEach(x=>x.classList.toggle('active',x===b));segment()});document.querySelectorAll('.style').forEach(b=>b.onclick=()=>{style=b.dataset.style;document.querySelectorAll('.style').forEach(x=>x.classList.toggle('active',x===b));render()});document.querySelectorAll('.bg').forEach(b=>b.onclick=()=>{background=b.dataset.bg;document.querySelectorAll('.bg').forEach(x=>x.classList.toggle('active',x===b));render()});
+setOutputReady(false);
+</script>
+</body>
+</html>
