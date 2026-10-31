@@ -11,11 +11,11 @@
     *{box-sizing:border-box}html,body{height:100%}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:13px;overflow:hidden}
     button,input,select{font:inherit;color:inherit}button{cursor:pointer}.hidden{display:none!important}
-    .app{height:100vh;display:grid;grid-template-rows:auto 1fr;padding:0 16px 16px}
+    .app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto 1fr;padding:0 16px 16px}
     header{display:flex;align-items:center;justify-content:space-between;height:60px;border-bottom:1px solid var(--line);margin:0 -16px 16px;padding:0 16px}
     .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:16px;letter-spacing:.02em}
     .logo{width:40px;height:40px;background:var(--ink);color:#111;display:grid;place-items:center;font-weight:800;font-size:17px;letter-spacing:-.05em}
-    .chip{border:1px solid var(--line);padding:9px 14px;font-size:12px;color:#cfcfcf}
+    .chip{border:1px solid var(--line);padding:9px 14px;font-size:12px;color:#cfcfcf;background:transparent}.hdr-right{display:flex;gap:8px}.fs{color:var(--ink);cursor:pointer}.fs:hover{border-color:var(--ink)}
     .layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,500px);border:1px solid var(--line);min-height:0}
     /* 왼쪽: 미리보기 */
     .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;min-width:0;min-height:0;border-right:1px solid var(--line)}
@@ -56,7 +56,7 @@
 </head>
 <body>
 <main class="app">
-  <header><div class="brand"><div class="logo">›\</div>TYPE SELFIE</div><div class="chip">SELPHY CP1500 · 6 × 4 in</div></header>
+  <header><div class="brand"><div class="logo">›\</div>TYPE SELFIE</div><div class="hdr-right"><button type="button" class="chip fs" id="fsBtn">⛶ 전체 화면</button><div class="chip">SELPHY CP1500 · 6 × 4 in</div></div></header>
   <div class="layout">
     <section class="stage">
       <div class="card">
@@ -170,6 +170,14 @@ $('#flipBtn').onclick=()=>{mirror=!mirror;localStorage.setItem('typeSelfieMirror
 async function listCameras(){const sel=$('#camSelect');try{const cams=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');const cur=stream&&stream.getVideoTracks()[0]?stream.getVideoTracks()[0].getSettings().deviceId:localStorage.getItem('typeSelfieCam');sel.innerHTML='';cams.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent='카메라 '+(i+1)+(d.label?' · '+d.label:'');if(d.deviceId===cur)o.selected=true;sel.appendChild(o)});sel.classList.toggle('hidden',cams.length<2)}catch(e){sel.classList.add('hidden')}}
 $('#camSelect').onchange=e=>{localStorage.setItem('typeSelfieCam',e.target.value);camera()};
 if(navigator.mediaDevices&&navigator.mediaDevices.addEventListener)navigator.mediaDevices.addEventListener('devicechange',listCameras);
+// 전체 화면: 전자칠판·태블릿에서 주소창을 숨겨 화면을 넓게 씁니다.
+const fsBtn=$('#fsBtn'),root=document.documentElement,reqFS=root.requestFullscreen||root.webkitRequestFullscreen;
+if(!reqFS)fsBtn.classList.add('hidden');
+fsBtn.onclick=()=>{const cur=document.fullscreenElement||document.webkitFullscreenElement;if(cur)(document.exitFullscreen||document.webkitExitFullscreen).call(document);else{const r=reqFS.call(root,{navigationUI:'hide'});if(r&&r.catch)r.catch(e=>status('전체 화면을 열 수 없습니다: '+e.message,'error'))}};
+['fullscreenchange','webkitfullscreenchange'].forEach(ev=>document.addEventListener(ev,()=>{fsBtn.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?'⛶ 전체 화면 끝내기':'⛶ 전체 화면';fitCard()}));
+// 미리보기 카드 크기를 남은 공간에 맞춰 촬영 버튼까지 항상 화면 안에 들어오게 합니다.
+function fitCard(){const st=$('.stage'),card=$('.card'),frame=$('#frame');if(innerWidth<=900){card.style.width='';return}const cs=getComputedStyle(st),gap=parseFloat(cs.rowGap||cs.gap)||12,padY=parseFloat(cs.paddingTop)+parseFloat(cs.paddingBottom),padX=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight);const availH=st.clientHeight-padY-$('#status').offsetHeight-$('.shot-row').offsetHeight-gap*2-14,availW=st.clientWidth-padX-14;const ccs=getComputedStyle(card),cardPadX=parseFloat(ccs.paddingLeft)+parseFloat(ccs.paddingRight)+2,chrome=card.offsetHeight-frame.offsetHeight;card.style.width=Math.max(260,Math.min(availW,(availH-chrome)*1.5+cardPadX))+'px'}
+if(window.ResizeObserver){const ro=new ResizeObserver(()=>fitCard());ro.observe($('.stage'));ro.observe($('#status'))}addEventListener('resize',fitCard);fitCard();
 $('#cameraBtn').onclick=camera;$('#shotBtn').onclick=capture;$('#retakeBtn').onclick=camera;$('#downloadBtn').onclick=download;$('#printBtn').onclick=print;
 $('#upload').onchange=e=>{let f=e.target.files[0];if(!f)return;let im=new Image();im.onload=()=>{sx.fillStyle='#fff';sx.fillRect(0,0,900,600);coverDraw(sx,im);hasPhoto=true;cat=null;setOutputReady(true);stopCamera();$('#empty').classList.add('hidden');$('#preview').classList.remove('hidden');$('#retakeBtn').classList.remove('hidden');render();segment();status('사진을 불러왔습니다.','success')};im.src=URL.createObjectURL(f)};
 ['#words','#font','#density','#contrast'].forEach(s=>$(s).addEventListener('input',render));$('#density').oninput=e=>{$('#densityOut').textContent=e.target.value;render()};$('#contrast').oninput=e=>{$('#contrastOut').textContent=(e.target.value/100).toFixed(2);render()};document.querySelectorAll('.mode').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;document.querySelectorAll('.mode').forEach(x=>x.classList.toggle('active',x===b));render()});document.querySelectorAll('.cut').forEach(b=>b.onclick=()=>{cutout=b.dataset.cut;document.querySelectorAll('.cut').forEach(x=>x.classList.toggle('active',x===b));segment()});document.querySelectorAll('.style').forEach(b=>b.onclick=()=>{style=b.dataset.style;document.querySelectorAll('.style').forEach(x=>x.classList.toggle('active',x===b));render()});document.querySelectorAll('.bg').forEach(b=>b.onclick=()=>{background=b.dataset.bg;document.querySelectorAll('.bg').forEach(x=>x.classList.toggle('active',x===b));render()});
